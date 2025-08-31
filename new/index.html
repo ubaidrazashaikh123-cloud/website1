@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Sadiq Traders — Final Dashboard</title>
+<style>
+  :root{
+    --bg:#0f172a; --card:#0b1229cc; --muted:#94a3b8; --text:#e2e8f0;
+    --brand:#22c55e; --warn:#ef4444; --line:#1f2a44; --shadow:0 10px 35px rgba(0,0,0,.35);
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial}
+  body{background:linear-gradient(180deg,#0a0f24 0%,#0f172a 100%) fixed;color:var(--text)}
+
+  /* ===== LOGIN (full cover) ===== */
+  #loginWrap{
+    position:fixed; inset:0; z-index:50;
+    background:
+      linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.75)),
+      url('https://images.unsplash.com/photo-1503602642458-232111445657?q=80&w=1920&auto=format&fit=crop') center/cover no-repeat;
+    display:grid; place-items:center;
+  }
+  .login-card{
+    width:min(430px,92vw); padding:28px; border-radius:20px;
+    background:rgba(17,24,39,.82); backdrop-filter: blur(10px);
+    box-shadow: var(--shadow);
+  }
+  .brand{display:flex; gap:12px; align-items:center; margin-bottom:14px}
+  .badge{height:46px;width:46px;border-radius:14px; display:grid;place-items:center;
+    background:linear-gradient(135deg,#2563eb,#22c55e); color:white; font-weight:800}
+  label{font-size:.85rem;color:var(--muted)}
+  .field{margin:8px 0 14px}
+  .input{width:100%; padding:12px 14px; border-radius:12px; outline:none; border:1px solid #233152; background:#0b1229; color:#e5e7eb}
+  .btn{padding:12px 14px; border:0; border-radius:12px; cursor:pointer; font-weight:600}
+  .btn-primary{background:var(--brand); color:#08121c; width:100%}
+  .err{color:#fecaca; min-height:18px; font-size:.9rem; margin-top:6px}
+
+  /* ===== HEADER ===== */
+  header{position:sticky; top:0; z-index:20; border-bottom:1px solid var(--line);
+    background:rgba(11,18,41,.8); backdrop-filter: blur(6px)}
+  .container{max-width:1200px; margin:auto; padding:14px 18px; display:flex; gap:14px; align-items:center}
+  .h-title{font-weight:700}
+  .container .right{display:flex; gap:8px; align-items:center}
+
+  /* ===== LAYOUT ===== */
+  .layout{max-width:1200px; margin:22px auto; padding:0 18px; display:grid; grid-template-columns:260px 1fr; gap:20px}
+
+  /* SIDEBAR */
+  .side{position:sticky; top:86px;background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow)}
+  .side h4{margin:0 0 10px;color:var(--muted); letter-spacing:.06em; font-size:.8rem; text-transform:uppercase}
+  .navbtn{width:100%; text-align:left; background:#0b1229; color:#e2e8f0; border:1px solid #233152;border-radius:12px; padding:10px 12px; margin:6px 0; cursor:pointer}
+  .navbtn:hover{border-color:#384a7a}
+  .pill{display:inline-block; padding:.2rem .5rem; border-radius:999px; background:#0b1229; border:1px solid #233152; color:#cbd5e1; font-size:.75rem}
+
+  /* CONTENT */
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow)}
+  .row{display:grid; grid-template-columns:repeat(12,1fr); gap:14px}
+  .col-4{grid-column: span 4}
+  .col-6{grid-column: span 6}
+  .col-12{grid-column: span 12}
+  .kpi{background:#0b1229; border:1px solid #233152; border-radius:14px; padding:14px}
+  .kpi .label{color:#a3b4d0; font-size:.85rem}
+  .kpi .value{font-weight:800; font-size:1.6rem; margin-top:6px}
+  .kpi.click{cursor:pointer}
+  table{width:100%; border-collapse: collapse; font-size:.92rem; color:#e5e7eb; table-layout:fixed}
+  th,td{border-bottom:1px solid #233152; padding:10px; vertical-align:middle}
+  th{text-align:left; color:#a3b4d0; font-weight:600}
+  .tbl-actions button{margin-right:6px}
+  .btn-small{padding:6px 10px; border-radius:10px; border:1px solid #233152; background:#0b1229; color:#e5e7eb; cursor:pointer}
+  .btn-danger{background:var(--warn); color:white; border:0}
+  .btn-good{background:var(--brand); color:#08121c; border:0}
+  .input-sm{padding:8px 10px; border-radius:10px; border:1px solid #233152; background:#0b1229; color:#e5e7eb; width:100%}
+  .select{padding:9px 10px; border-radius:10px; border:1px solid #233152; background:#0b1229; color:#e5e7eb; width:100%}
+  .nowrap{white-space:nowrap}
+
+  /* precise widths for invoice builder cells */
+  .w-idx{width:38px}
+  .w-item{width:260px}
+  .w-qty{width:86px}
+  .w-qty.small{width:74px}
+  .w-price{width:120px}
+  .w-total{width:120px}
+  .stack{display:grid; gap:6px}
+
+  /* MODAL */
+  .modal{position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; z-index:40}
+  .modal > .box{width:min(900px,95vw); max-height:85vh; overflow:auto; background:#0b1229; border:1px solid #233152; border-radius:16px; padding:16px; box-shadow:var(--shadow)}
+
+  /* PRINT */
+  @media print{
+    body *{visibility:hidden}
+    #printArea, #printArea *{visibility:visible}
+    #printArea{position:absolute; inset:0; padding:24px; background:white; color:#0b1229}
+    .no-print{display:none !important}
+  }
+
+  /* ======= RESPONSIVE ======= */
+  /* tablets */
+  @media (max-width: 1024px){
+    .layout{grid-template-columns:220px 1fr}
+    .row{grid-template-columns:repeat(12,1fr)}
+    .w-item{width:220px}
+  }
+  /* phones */
+  @media (max-width: 900px){
+    .layout{grid-template-columns: 1fr; gap:14px}
+    .side{position:static}
+    .row{grid-template-columns: repeat(6,1fr)}
+    .col-4,.col-6{grid-column: span 6}
+    .w-item{width:auto}
+    .kpi .value{font-size:1.4rem}
+    /* tables become horizontally scrollable and keep columns readable */
+    table{display:block; overflow-x:auto; white-space:nowrap; -webkit-overflow-scrolling:touch}
+    th,td{padding:8px}
+    /* form grids stack better */
+    #createInv .row > .col-12 > div[style*="grid-template-columns"]{
+      display:grid!important; grid-template-columns:1fr 1fr; gap:10px
+    }
+    #createInv .row > .col-12 > div[style*="grid-template-columns"] > div:last-child{
+      grid-column: span 2; text-align:right
+    }
+    /* header compact */
+    .container{padding:10px 14px}
+    .h-title{font-size:1rem}
+  }
+  @media (max-width: 520px){
+    /* even tighter for small phones */
+    #createInv .row > .col-12 > div[style*="grid-template-columns"]{grid-template-columns:1fr}
+    #createInv .row > .col-12 > div[style*="grid-template-columns"] > div:last-child{grid-column: span 1; text-align:left}
+    .btn-small{width:100%}
+    .navbtn{padding:12px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN (FULL PAGE) ===== -->
+<div id="loginWrap">
+  <div class="login-card">
+    <div class="brand">
+      <div class="badge">ST</div>
+      <div>
+        <div style="font-size:1.15rem;font-weight:800;color:#e5e7eb">Sadiq Traders</div>
+        <div style="font-size:.8rem;color:#a3b4d0">Secure Login</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Username</label>
+      <input id="lgUser" class="input" placeholder="sadiqtraders" />
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input id="lgPass" type="password" class="input" placeholder="••••••••••••" />
+    </div>
+    <button id="btnLogin" class="btn btn-primary">Login</button>
+    <div id="lgErr" class="err"></div>
+  </div>
+</div>
+
+<!-- ===== HEADER ===== -->
+<header class="no-print">
+  <div class="container">
+    <div class="badge">ST</div>
+    <div style="flex:1">
+      <div class="h-title">Sadiq Traders — Inventory & Invoicing</div>
+      <div style="font-size:.8rem;color:#8ea0c2">Local storage • Offline • Print invoices</div>
+    </div>
+    <div class="right">
+      <button id="btnToggleSide" class="btn-small" aria-label="Toggle menu">☰ Menu</button>
+      <button id="btnLogout" class="btn-small">Logout</button>
+    </div>
+  </div>
+</header>
+
+<!-- ===== LAYOUT ===== -->
+<main class="layout no-print">
+  <!-- SIDEBAR -->
+  <aside class="side" id="sidebar">
+    <h4>Menu</h4>
+    <button class="navbtn" data-target="dash">🏠 Dashboard</button>
+    <button class="navbtn" data-target="items">📦 Items</button>
+    <button class="navbtn" data-target="receive">⬇️ Receive CTN</button>
+    <button class="navbtn" data-target="pending">📥 Pending CTN</button>
+    <button class="navbtn" data-target="createInv">🧾 Create Invoice</button>
+    <button class="navbtn" data-target="invoices">📄 Invoices</button>
+    <button id="btnSalesMenu" class="navbtn">💸 Sales (click)</button>
+    <div id="salesOptions" style="display:none; margin-top:6px">
+      <span class="pill">Select:</span>
+      <div style="margin-top:8px; display:grid; gap:6px">
+        <button class="navbtn salesopt" data-name="Ahmed Raza">Ahmed Raza</button>
+        <button class="navbtn salesopt" data-name="Adil">Adil</button>
+        <button class="navbtn salesopt" data-name="Khushi">Khushi</button>
+        <button class="navbtn salesopt" data-name="Faisal">Faisal</button>
+        <button class="navbtn salesopt" data-name="All">All</button>
+      </div>
+    </div>
+    <button class="navbtn" data-target="history">📚 CTN History</button>
+  </aside>
+
+  <!-- CONTENT -->
+  <section id="content">
+    <!-- DASHBOARD -->
+    <div id="dash" class="card">
+      <div class="row">
+        <div class="col-4">
+          <div class="kpi">
+            <div class="label">Sales (Paid PKR)</div>
+            <div id="kpiSales" class="value">0</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div id="cardPendingAmt" class="kpi click" title="Click to view pending invoices">
+            <div class="label">Pending Amount (PKR)</div>
+            <div id="kpiPendingAmt" class="value">0</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div id="cardPendingCtn" class="kpi click" title="Click to view pending CTN">
+            <div class="label">Pending CTN (in store)</div>
+            <div id="kpiPendingCtn" class="value">0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ITEMS -->
+    <div id="items" class="card" style="display:none">
+      <div class="row">
+        <div class="col-6"><h3 style="margin:0">Items</h3></div>
+        <div class="col-6" style="text-align:right">
+          <button id="btnAddItem" class="btn-good btn-small">+ Add Item</button>
+        </div>
+        <div class="col-12">
+          <table>
+            <thead><tr><th class="w-idx">#</th><th>Item Name</th><th class="w-total">Actions</th></tr></thead>
+            <tbody id="itemsTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECEIVE CTN (bulk, with DATE) -->
+    <div id="receive" class="card" style="display:none">
+      <div class="row">
+        <div class="col-12"><h3 style="margin:0">Receive CTN (Bulk Entry)</h3></div>
+
+        <div class="col-12" style="display:flex; gap:10px; align-items:end; margin:4px 0 6px; flex-wrap:wrap">
+          <div style="min-width:160px">
+            <label>Receipt Date</label>
+            <input id="recDate" type="date" class="input-sm" />
+          </div>
+          <div class="pill">Selected Date Total CTN: <span id="todayRecTotal">0</span></div>
+        </div>
+
+        <div class="col-12" style="color:#a3b4d0;font-size:.9rem">Is date par aane wala maal “CTN” me add karein.</div>
+
+        <div class="col-12">
+          <table>
+            <thead>
+              <tr><th class="w-idx">#</th><th>Item</th><th class="w-qty">CTN</th><th class="w-total">Action</th></tr>
+            </thead>
+            <tbody id="recEditor"></tbody>
+          </table>
+          <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
+            <button id="btnAddRecRow" class="btn-small">+ Add Row</button>
+            <button id="btnSaveAllRec" class="btn-good btn-small">Save All (For Date)</button>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <h4 style="margin:14px 0 8px">Receipts for <span id="recDateLabel"></span></h4>
+          <table>
+            <thead><tr><th>Date</th><th>Item</th><th>CTN</th><th>Delete</th></tr></thead>
+            <tbody id="recTodayTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PENDING CTN -->
+    <div id="pending" class="card" style="display:none">
+      <h3 style="margin:0 0 8px">Pending CTN (Stock in store)</h3>
+      <table>
+        <thead><tr><th class="w-idx">#</th><th>Item</th><th class="w-qty">CTN</th><th class="w-qty">Dozen</th><th class="w-qty">Pieces</th></tr></thead>
+        <tbody id="pendingCtnTbody"></tbody>
+      </table>
+    </div>
+
+    <!-- CREATE INVOICE -->
+    <div id="createInv" class="card" style="display:none">
+      <div class="row">
+        <div class="col-12"><h3 style="margin:0">Create Invoice</h3></div>
+
+        <div class="col-12" style="display:grid; grid-template-columns: repeat(5,1fr); gap:10px; align-items:end">
+          <div>
+            <label>Invoice #</label>
+            <input id="invNo" class="input-sm" placeholder="INV-001" />
+          </div>
+          <div>
+            <label>Date</label>
+            <input id="invDate" type="date" class="input-sm" />
+          </div>
+          <div>
+            <label>Customer</label>
+            <input id="invCust" class="input-sm" placeholder="Customer name" />
+          </div>
+          <div>
+            <label>Initial Paid (PKR)</label>
+            <input id="invPaid" type="number" min="0" value="0" class="input-sm" />
+          </div>
+          <div style="text-align:right">
+            <button id="btnAddLine" class="btn-small">+ Add Line</button>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <table>
+            <thead>
+              <tr>
+                <th class="w-idx">#</th>
+                <th class="w-item">Item (Search + List)</th>
+                <th class="w-qty">CTN</th>
+                <th class="w-qty small">Dozen</th>
+                <th class="w-qty small">Pieces</th>
+                <th class="w-price nowrap">Price / Piece</th>
+                <th class="w-total nowrap">Line Total</th>
+                <th class="w-total"></th>
+              </tr>
+            </thead>
+            <tbody id="invLines"></tbody>
+          </table>
+          <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap">
+            <div class="pill">Total (PKR): <span id="invTotal">0</span></div>
+            <button id="btnCreateInv" class="btn-good btn-small">Create Invoice</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVOICES LIST -->
+    <div id="invoices" class="card" style="display:none">
+      <div class="row">
+        <div class="col-12" style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap">
+          <h3 style="margin:0">Invoices</h3>
+          <label class="pill" style="cursor:pointer">
+            <input id="togglePendingOnly" type="checkbox" style="vertical-align:middle; margin-right:6px" />
+            Show only pending
+          </label>
+        </div>
+
+        <div class="col-12" style="display:flex; gap:10px; align-items:center; margin-bottom:8px; flex-wrap:wrap">
+          <input id="invSearch" class="input-sm" placeholder="Search invoice # / customer" />
+          <button id="btnRefreshInv" class="btn-small">Refresh</button>
+        </div>
+        <div class="col-12">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th><th>Invoice #</th><th>Customer</th>
+                <th class="nowrap">Total</th><th class="nowrap">Paid</th><th class="nowrap">Pending</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="invTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SALES (customer dashboard style) -->
+    <div id="sales" class="card" style="display:none">
+      <h3 id="salesTitle" style="margin:0 0 12px">Sales</h3>
+      <div class="row" style="margin-bottom:8px">
+        <div class="col-4"><div class="kpi"><div class="label">Sales (Paid PKR)</div><div id="salesPaid" class="value">0</div></div></div>
+        <div class="col-4"><div class="kpi"><div class="label">Pending Amount (PKR)</div><div id="salesPending" class="value">0</div></div></div>
+        <div class="col-4"><div class="kpi"><div class="label">Invoices</div><div id="salesCount" class="value">0</div></div></div>
+      </div>
+      <table>
+        <thead><tr><th class="w-idx">#</th><th>Date</th><th>Invoice #</th><th>Customer</th><th>Total</th><th>Paid</th><th>Pending</th></tr></thead>
+        <tbody id="salesTbody"></tbody>
+      </table>
+    </div>
+
+    <!-- HISTORY (date folders first) -->
+    <div id="history" class="card" style="display:none">
+      <h3 style="margin:0 0 8px">CTN History</h3>
+      <div id="histDates" class="row" style="margin-bottom:10px"></div>
+      <div id="histView" style="display:none">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin:6px 0 8px; gap:10px; flex-wrap:wrap">
+          <h4 id="histTitle" style="margin:0">Receipts</h4>
+          <button id="btnBackHist" class="btn-small">← Back</button>
+        </div>
+        <table>
+          <thead><tr><th class="w-idx">#</th><th>Date</th><th>Item</th><th class="w-qty">CTN</th><th class="w-total">Delete</th></tr></thead>
+          <tbody id="histTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ===== INVOICE MODAL (details + payments) ===== -->
+<div id="invModal" class="modal">
+  <div class="box">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:10px; flex-wrap:wrap">
+      <h3 style="margin:0">Invoice Details</h3>
+      <button id="btnCloseInv" class="btn-small">Close</button>
+    </div>
+    <div id="invDetails"></div>
+    <div style="margin-top:10px">
+      <h4 style="margin:0 0 6px">Add Payment</h4>
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+        <input id="payAmt" type="number" class="input-sm" placeholder="Amount (PKR)" />
+        <input id="payPwd" type="password" class="input-sm" placeholder="Password (required)" />
+        <button id="btnAddPayment" class="btn-good btn-small">Add</button>
+      </div>
+      <div style="font-size:.85rem; color:#a3b4d0; margin-top:6px"> <b></b></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PRINT AREA ===== -->
+<div id="printArea" class="no-print" style="display:none">
+  <div style="max-width:800px;margin:0 auto;color:#0b1229">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid #cbd5e1; padding-bottom:8px; margin-bottom:10px">
+      <div>
+        <div style="font-size:24px; font-weight:800">INVOICE</div>
+        <div style="color:#334155">Sadiq Traders</div>
+      </div>
+      <div style="text-align:right">
+        <div style="color:#334155; font-size:12px">Date</div>
+        <div id="pDate" style="font-weight:700"></div>
+        <div style="color:#334155; font-size:12px; margin-top:6px">Invoice #</div>
+        <div id="pNo" style="font-weight:700"></div>
+      </div>
+    </div>
+    <div style="margin-bottom:8px">
+      <div style="color:#334155; font-size:12px">Bill To</div>
+      <div id="pCust" style="font-weight:700"></div>
+    </div>
+    <table style="width:100%; border-collapse:collapse; font-size:14px">
+      <thead style="background:#eef2f7">
+        <tr><th style="text-align:left;padding:8px;border:1px solid #cbd5e1">#</th>
+            <th style="text-align:left;padding:8px;border:1px solid #cbd5e1">Item</th>
+            <th style="text-align:left;padding:8px;border:1px solid #cbd5e1">CTN/Dozen/Pcs</th>
+            <th style="text-align:left;padding:8px;border:1px solid #cbd5e1">Price/pc</th>
+            <th style="text-align:left;padding:8px;border:1px solid #cbd5e1">Line Total</th></tr>
+      </thead>
+      <tbody id="pLines"></tbody>
+      <tfoot>
+        <tr><td colspan="4" style="text-align:right;padding:8px;border:1px solid #cbd5e1"><b>Grand Total</b></td>
+            <td id="pGrand" style="padding:8px;border:1px solid #cbd5e1"></td></tr>
+        <tr><td colspan="4" style="text-align:right;padding:8px;border:1px solid #cbd5e1">Paid</td>
+            <td id="pPaid" style="padding:8px;border:1px solid #cbd5e1"></td></tr>
+        <tr><td colspan="4" style="text-align:right;padding:8px;border:1px solid #cbd5e1">Pending</td>
+            <td id="pPend" style="padding:8px;border:1px solid #cbd5e1"></td></tr>
+      </tfoot>
+    </table>
+    <div style="text-align:center; color:#475569; margin-top:12px">Thank you for your business — Sadiq Traders</div>
+  </div>
+</div>
+
+<script>
+/* ========= CONSTANTS ========= */
+const USER='sadiqtraders';
+const PASS='sadiqtraders2526';
+const PAY_PWD='123456789';
+const LSKEY='st_app_v5';
+const P_PER_DOZEN=6;
+const DOZEN_PER_CTN=12;
+const P_PER_CTN=DOZEN_PER_CTN*P_PER_DOZEN; // 72
+
+/* ========= HELPERS ========= */
+const $=s=>document.querySelector(s);
+const $$=s=>Array.from(document.querySelectorAll(s));
+const todayISO=()=> new Date().toISOString().slice(0,10);
+const fmt=n=>Number(n||0).toLocaleString('en-PK');
+
+/* pieces <-> ctn/dozen/pieces conversions */
+function piecesToCDP(pcs){
+  const ctn = Math.floor(pcs / P_PER_CTN);
+  let rem = pcs % P_PER_CTN;
+  const dozen = Math.floor(rem / P_PER_DOZEN);
+  const piece = rem % P_PER_DOZEN;
+  return {ctn, dozen, piece};
+}
+function cdpToPieces({ctn=0, dozen=0, piece=0}){
+  return (ctn*P_PER_CTN) + (dozen*P_PER_DOZEN) + piece;
+}
+
+/* ========= DATA ========= */
+const defaultDB={
+  items:[
+    {id:1, name:'Makhan'},
+    {id:2, name:'Badami'},
+    {id:3, name:'Toffee'}
+  ],
+  receipts:[],   // {id, date, itemId, ctn}
+  invoices:[],   // {id, date, customer, lines:[{itemId, ctn, dozen, piece, pricePerPiece, lineTotal, id}], total, paid}
+};
+let db;
+
+function loadDB(){
+  const raw=localStorage.getItem(LSKEY);
+  if(!raw){ db=structuredClone(defaultDB); saveDB(); return; }
+  try{ db=JSON.parse(raw); }catch{ db=structuredClone(defaultDB); saveDB(); }
+}
+function saveDB(){ localStorage.setItem(LSKEY, JSON.stringify(db)); }
+function uid(){ return 'id'+Math.random().toString(36).slice(2,9); }
+
+/* ========= AUTH ========= */
+function checkAuth(){
+  if(sessionStorage.getItem('auth_ok')==='1'){ $('#loginWrap').style.display='none'; }
+  else { $('#loginWrap').style.display='grid'; }
+}
+$('#btnLogin').addEventListener('click', ()=>{
+  const u=$('#lgUser').value.trim(); const p=$('#lgPass').value.trim();
+  if(u===USER && p===PASS){ sessionStorage.setItem('auth_ok','1'); $('#lgErr').textContent=''; $('#loginWrap').style.display='none'; }
+  else { $('#lgErr').textContent='Invalid username or password'; }
+});
+$('#btnLogout').addEventListener('click', ()=>{ sessionStorage.removeItem('auth_ok'); location.reload(); });
+
+/* ========= NAV ========= */
+$$('.navbtn').forEach(b=>b.addEventListener('click', e=>{
+  const t=e.currentTarget.dataset.target;
+  if(t) showSection(t);
+  // collapse sidebar on phones after click
+  if(window.innerWidth<=900){ $('#sidebar').style.display='none'; }
+}));
+function showSection(id){
+  ['dash','items','receive','pending','createInv','invoices','sales','history'].forEach(x=>{ const el=document.getElementById(x); if(el) el.style.display='none'; });
+  const s=document.getElementById(id); if(s) s.style.display='block';
+  if(id==='dash') refreshKPI();
+  if(id==='items') renderItems();
+  if(id==='receive'){ setupReceive(); renderRecEditor(); renderReceiptsForDate($('#recDate').value); }
+  if(id==='pending') renderPendingCtn();
+  if(id==='createInv'){ resetInvBuilder(false); }
+  if(id==='invoices'){ renderInvList(); }
+  if(id==='history') renderHistoryDates();
+}
+$('#cardPendingCtn').addEventListener('click', ()=> showSection('pending'));
+
+/* NEW: Dashboard Pending Amount → open invoices filtered to pending only */
+$('#cardPendingAmt').addEventListener('click', ()=>{
+  showSection('invoices');
+  $('#togglePendingOnly').checked = true;
+  renderInvList(true);
+});
+
+/* Sales menu toggle + handlers */
+$('#btnSalesMenu').addEventListener('click', ()=>{
+  const x=$('#salesOptions'); x.style.display = (x.style.display==='none' || x.style.display==='') ? 'block' : 'none';
+});
+$$('.salesopt').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const name=btn.dataset.name;
+    openSales(name);
+  });
+});
+
+/* Header Menu toggle (for mobile) */
+$('#btnToggleSide').addEventListener('click', ()=>{
+  const sb=$('#sidebar');
+  sb.style.display = (sb.style.display==='none' || sb.style.display==='') ? 'block' : 'none';
+  // scroll to top so user sees the menu first
+  if(sb.style.display==='block') window.scrollTo({top:0, behavior:'smooth'});
+});
+
+/* ========= ITEMS ========= */
+function renderItems(){
+  const tb=$('#itemsTbody'); tb.innerHTML='';
+  db.items.forEach((it,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="w-idx">${i+1}</td><td>${it.name}</td>
+      <td class="tbl-actions w-total"><button class="btn-danger btn-small" data-id="${it.id}">Delete</button></td>`;
+    tb.appendChild(tr);
+  });
+  tb.querySelectorAll('.btn-danger').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const id=Number(b.dataset.id);
+      if(!confirm('Delete item?')) return;
+      db.items = db.items.filter(x=>x.id!==id);
+      saveDB(); renderItems(); renderRecEditor();
+    });
+  });
+}
+$('#btnAddItem').addEventListener('click', ()=>{
+  const id=Number(prompt('Item ID (number):'));
+  if(!id) return alert('Invalid ID');
+  if(db.items.some(x=>x.id===id)) return alert('ID exists');
+  const name=prompt('Item name:'); if(!name) return alert('Name required');
+  db.items.push({id, name}); saveDB(); renderItems(); renderRecEditor();
+});
+
+/* ========= RECEIVE (bulk WITH DATE) ========= */
+function setupReceive(){
+  if(!$('#recDate').value) $('#recDate').value=todayISO();
+  $('#recDateLabel').textContent = $('#recDate').value;
+}
+function renderRecEditor(){
+  const tb=$('#recEditor'); tb.innerHTML='';
+  addRecRow(); updateEditorTotal();
+}
+function addRecRow(){
+  const tb=$('#recEditor');
+  const idx=tb.children.length+1;
+  const opts=db.items.map(it=>`<option value="${it.id}">${it.id} — ${it.name}</option>`).join('');
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td class="w-idx">${idx}</td>
+    <td><select class="select rec-item">${opts}</select></td>
+    <td class="w-qty"><input type="number" min="1" value="1" class="input-sm rec-ctn" /></td>
+    <td class="w-total"><button class="btn-danger btn-small rec-del">Remove</button></td>`;
+  tb.appendChild(tr);
+  tr.querySelector('.rec-del').addEventListener('click', ()=>{ tr.remove(); renumberRec(); updateEditorTotal(); });
+  tr.querySelector('.rec-ctn').addEventListener('input', updateEditorTotal);
+}
+function renumberRec(){ $$('#recEditor tr').forEach((tr,i)=> tr.querySelector('td').textContent=i+1); }
+function updateEditorTotal(){
+  let tot=0; $$('#recEditor .rec-ctn').forEach(inp=> tot+= Number(inp.value||0));
+  $('#todayRecTotal').textContent = fmt(tot);
+}
+$('#btnAddRecRow').addEventListener('click', addRecRow);
+$('#btnSaveAllRec').addEventListener('click', ()=>{
+  const rows=$$('#recEditor tr');
+  if(rows.length===0) return alert('Add at least one row');
+  const date=$('#recDate').value || todayISO();
+  rows.forEach(tr=>{
+    const itemId=Number(tr.querySelector('.rec-item').value);
+    const ctn=Number(tr.querySelector('.rec-ctn').value||0);
+    if(ctn>0) db.receipts.push({id:uid(), date, itemId, ctn});
+  });
+  saveDB();
+  alert('Saved for '+date);
+  renderRecEditor(); renderReceiptsForDate(date); refreshKPI(); renderPendingCtn(); renderHistoryDates();
+});
+$('#recDate').addEventListener('change', ()=>{
+  $('#recDateLabel').textContent = $('#recDate').value;
+  renderReceiptsForDate($('#recDate').value);
+});
+function renderReceiptsForDate(date){
+  const tb=$('#recTodayTbody'); tb.innerHTML='';
+  const list=db.receipts.filter(r=>r.date===date).slice().reverse();
+  if(list.length===0){ tb.innerHTML = `<tr><td colspan="4" style="color:#a3b4d0">No receipts on ${date}</td></tr>`; return; }
+  list.forEach(r=>{
+    const it=db.items.find(x=>x.id===r.itemId);
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${r.date}</td><td>${it?.name||r.itemId}</td><td>${r.ctn}</td>
+      <td><button class="btn-danger btn-small" data-id="${r.id}">Delete</button></td>`;
+    tb.appendChild(tr);
+  });
+  tb.querySelectorAll('.btn-danger').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const id=b.dataset.id;
+      if(!confirm('Delete this receipt?')) return;
+      db.receipts = db.receipts.filter(x=>x.id!==id);
+      saveDB(); renderReceiptsForDate(date); refreshKPI(); renderPendingCtn(); renderHistoryDates();
+    });
+  });
+}
+
+/* ========= HISTORY (folders) ========= */
+function renderHistoryDates(){
+  $('#histView').style.display='none';
+  const wrap=$('#histDates'); wrap.innerHTML='';
+  const byDate = {};
+  db.receipts.forEach(r=>{ byDate[r.date]=(byDate[r.date]||0)+r.ctn; });
+  const dates=Object.keys(byDate).sort().reverse();
+  if(dates.length===0){ wrap.innerHTML='<div class="col-12" style="color:#a3b4d0">No history</div>'; return; }
+  dates.forEach(d=>{
+    const div=document.createElement('div');
+    div.className='col-4';
+    div.innerHTML=`
+      <div class="kpi click" data-date="${d}">
+        <div class="label">Date</div>
+        <div class="value">${d}</div>
+        <div class="label" style="margin-top:6px">Total CTN: ${fmt(byDate[d])}</div>
+      </div>`;
+    wrap.appendChild(div);
+    div.querySelector('.kpi').addEventListener('click', ()=>{
+      renderHistoryFor(d);
+      // scroll to the details on phones
+      setTimeout(()=>document.getElementById('histView').scrollIntoView({behavior:'smooth'}), 50);
+    });
+  });
+}
+function renderHistoryFor(date){
+  $('#histDates').innerHTML='';
+  $('#histView').style.display='block';
+  $('#histTitle').textContent='Receipts — '+date;
+  const tb=$('#histTbody'); tb.innerHTML='';
+  const list=db.receipts.filter(r=>r.date===date).slice().reverse();
+  if(list.length===0){ tb.innerHTML = `<tr><td colspan="5" style="color:#a3b4d0">No receipts</td></tr>`; return; }
+  list.forEach((r,i)=>{
+    const it=db.items.find(x=>x.id===r.itemId);
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="w-idx">${i+1}</td><td>${r.date}</td><td>${it?.name||r.itemId}</td><td class="w-qty">${r.ctn}</td>
+      <td class="w-total"><button class="btn-danger btn-small" data-id="${r.id}">Delete</button></td>`;
+    tb.appendChild(tr);
+  });
+  tb.querySelectorAll('.btn-danger').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const id=b.dataset.id;
+      if(!confirm('Delete this receipt?')) return;
+      db.receipts=db.receipts.filter(x=>x.id!==id);
+      saveDB(); renderHistoryFor(date); refreshKPI(); renderPendingCtn();
+    });
+  });
+}
+$('#btnBackHist').addEventListener('click', renderHistoryDates);
+
+/* ========= STOCK / PENDING CTN ========= */
+function calcStockPiecesByItem(){
+  const inMap = {};
+  db.receipts.forEach(r=>{
+    inMap[r.itemId]=(inMap[r.itemId]||0) + r.ctn*P_PER_CTN;
+  });
+  const outMap = {};
+  db.invoices.forEach(inv=>{
+    inv.lines.forEach(ln=>{
+      const pcs = cdpToPieces(ln);
+      outMap[ln.itemId]=(outMap[ln.itemId]||0)+pcs;
+    });
+  });
+  const allItemIds = new Set([...Object.keys(inMap).map(Number), ...Object.keys(outMap).map(Number), ...db.items.map(x=>x.id)]);
+  const res = [];
+  allItemIds.forEach(id=>{
+    const name=(db.items.find(x=>x.id===id)||{name:id}).name;
+    const inP=inMap[id]||0, outP=outMap[id]||0;
+    const pend = Math.max(0, inP - outP);
+    res.push({itemId:id, name, pieces:pend, cdp:piecesToCDP(pend)});
+  });
+  return res;
+}
+function renderPendingCtn(){
+  const tb=$('#pendingCtnTbody'); tb.innerHTML='';
+  const rows = calcStockPiecesByItem().filter(r=>r.pieces>0);
+  if(rows.length===0){ tb.innerHTML=`<tr><td colspan="5" style="color:#a3b4d0">No pending CTN — stock empty</td></tr>`; return; }
+  rows.forEach((r,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="w-idx">${i+1}</td><td>${r.name}</td><td class="w-qty">${r.cdp.ctn}</td><td class="w-qty">${r.cdp.dozen}</td><td class="w-qty">${r.cdp.piece}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+/* ========= DASHBOARD KPI ========= */
+function refreshKPI(){
+  const paid = db.invoices.reduce((s,inv)=> s + (inv.paid||0), 0);
+  $('#kpiSales').textContent = fmt(paid);
+  const pendingAmt = db.invoices.reduce((s,inv)=> s + Math.max(0, inv.total - (inv.paid||0)), 0);
+  $('#kpiPendingAmt').textContent = fmt(pendingAmt);
+  const totalPieces = calcStockPiecesByItem().reduce((s,r)=> s+r.pieces, 0);
+  const cdp=piecesToCDP(totalPieces);
+  $('#kpiPendingCtn').textContent = fmt(cdp.ctn); // only CTN on main card
+}
+
+/* ========= INVOICE BUILDER ========= */
+function resetInvBuilder(clear=true){
+  if(clear){
+    $('#invNo').value='';
+    $('#invDate').value=todayISO();
+    $('#invCust').value='';
+    $('#invPaid').value=0;
+  } else {
+    if(!$('#invDate').value) $('#invDate').value=todayISO();
+  }
+  $('#invLines').innerHTML='';
+  addInvLine();
+  updateInvTotal();
+}
+function itemOptions(){
+  return db.items.map(it=>`<option value="${it.id}">${it.id} — ${it.name}</option>`).join('');
+}
+function filterSelectOptions(selectEl, query){
+  const q=(query||'').toLowerCase();
+  const all = db.items.map(it=>({id:it.id, text:`${it.id} — ${it.name}`}));
+  const filt = q ? all.filter(o=>o.text.toLowerCase().includes(q)) : all;
+  selectEl.innerHTML = filt.map(o=>`<option value="${o.id}">${o.text}</option>`).join('');
+}
+function addInvLine(){
+  const tb=$('#invLines');
+  const idx=tb.children.length+1;
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td class="w-idx">${idx}</td>
+    <td class="w-item">
+      <div class="stack">
+        <input type="text" placeholder="Search item..." class="input-sm ln-search" />
+        <select class="select ln-item">${itemOptions()}</select>
+      </div>
+    </td>
+    <td class="w-qty"><input type="number" min="0" value="0" class="input-sm ln-ctn" /></td>
+    <td class="w-qty small"><input type="number" min="0" value="0" class="input-sm ln-doz" /></td>
+    <td class="w-qty small"><input type="number" min="0" value="0" class="input-sm ln-pcs" /></td>
+    <td class="w-price nowrap"><input type="number" min="0" value="0" class="input-sm ln-price" /></td>
+    <td class="w-total nowrap ln-total">0</td>
+    <td class="w-total"><button class="btn-danger btn-small ln-del">Remove</button></td>
+  `;
+  tb.appendChild(tr);
+
+  // search → filter this row's select
+  const sel=tr.querySelector('.ln-item');
+  tr.querySelector('.ln-search').addEventListener('input', (e)=> filterSelectOptions(sel, e.target.value));
+
+  const recalc=()=>{ const pcs=cdpToPieces({
+      ctn:Number(tr.querySelector('.ln-ctn').value||0),
+      dozen:Number(tr.querySelector('.ln-doz').value||0),
+      piece:Number(tr.querySelector('.ln-pcs').value||0)
+    });
+    const price=Number(tr.querySelector('.ln-price').value||0);
+    tr.querySelector('.ln-total').textContent = fmt(pcs*price);
+    updateInvTotal();
+  };
+  ['.ln-ctn','.ln-doz','.ln-pcs','.ln-price'].forEach(sel2=> tr.querySelector(sel2).addEventListener('input', recalc));
+  tr.querySelector('.ln-del').addEventListener('click', ()=>{ tr.remove(); renumberLines(); updateInvTotal(); });
+}
+function renumberLines(){ $$('#invLines tr').forEach((tr,i)=> tr.querySelector('td').textContent=i+1); }
+function updateInvTotal(){
+  let t=0;
+  $$('#invLines tr').forEach(tr=>{
+    const pcs=cdpToPieces({
+      ctn:Number(tr.querySelector('.ln-ctn').value||0),
+      dozen:Number(tr.querySelector('.ln-doz').value||0),
+      piece:Number(tr.querySelector('.ln-pcs').value||0)
+    });
+    const price=Number(tr.querySelector('.ln-price').value||0);
+    t += pcs*price;
+  });
+  $('#invTotal').textContent = fmt(t);
+}
+$('#btnAddLine').addEventListener('click', addInvLine);
+
+$('#btnCreateInv').addEventListener('click', ()=>{
+  const id = ($('#invNo').value||'').trim();
+  if(!id) return alert('Invoice # required');
+  if(db.invoices.some(x=>x.id===id)) return alert('Invoice # already exists');
+  const date = $('#invDate').value || todayISO();
+  const customer = ($('#invCust').value||'').trim() || 'Walk-in';
+  const lines=[];
+  $$('#invLines tr').forEach(tr=>{
+    const sel=tr.querySelector('.ln-item');
+    const itemId=Number((sel.value||sel.querySelector('option')?.value)||0);
+    const ctn=Number(tr.querySelector('.ln-ctn').value||0);
+    const dozen=Number(tr.querySelector('.ln-doz').value||0);
+    const piece=Number(tr.querySelector('.ln-pcs').value||0);
+    const pricePerPiece=Number(tr.querySelector('.ln-price').value||0);
+    const pcs=cdpToPieces({ctn, dozen, piece});
+    const lineTotal = pcs*pricePerPiece;
+    if(pcs>0 && itemId) lines.push({id:uid(), itemId, ctn, dozen, piece, pricePerPiece, lineTotal});
+  });
+  if(lines.length===0) return alert('Add at least one line with quantity');
+  const total = lines.reduce((s,ln)=> s+ln.lineTotal, 0);
+  const paid = Number($('#invPaid').value||0);
+  db.invoices.push({id, date, customer, lines, total, paid});
+  saveDB();
+  alert('Invoice created');
+  resetInvBuilder();
+  renderInvList(); refreshKPI(); renderPendingCtn();
+});
+
+/* ========= INVOICES LIST (with pending-only toggle) ========= */
+function renderInvList(pendingOnly=null){
+  const only = (pendingOnly===null) ? $('#togglePendingOnly').checked : pendingOnly;
+  if(pendingOnly!==null) $('#togglePendingOnly').checked = only;
+
+  const q=($('#invSearch')?.value||'').toLowerCase();
+  const tb=$('#invTbody'); if(!tb) return;
+  tb.innerHTML='';
+  let list=db.invoices.slice().reverse();
+
+  if(only){
+    list = list.filter(inv=> (inv.total - (inv.paid||0)) > 0.0001);
+  }
+  list = list.filter(inv=> !q || inv.id.toLowerCase().includes(q) || inv.customer.toLowerCase().includes(q));
+
+  if(list.length===0){ tb.innerHTML=`<tr><td colspan="7" style="color:#a3b4d0">No invoices</td></tr>`; return; }
+  list.forEach(inv=>{
+    const pending=Math.max(0, inv.total - (inv.paid||0));
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${inv.date}</td>
+      <td>${inv.id}</td>
+      <td>${inv.customer}</td>
+      <td class="nowrap">${fmt(inv.total)}</td>
+      <td class="nowrap">${fmt(inv.paid||0)}</td>
+      <td class="nowrap">${fmt(pending)}</td>
+      <td class="tbl-actions">
+        <button class="btn-small" data-id="${inv.id}" data-act="details">Details</button>
+        <button class="btn-small" data-id="${inv.id}" data-act="print">Print</button>
+        <button class="btn-danger btn-small" data-id="${inv.id}" data-act="delete">Delete</button>
+      </td>`;
+    tb.appendChild(tr);
+  });
+  tb.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id=btn.dataset.id, act=btn.dataset.act;
+      if(act==='delete'){
+        if(!confirm('Delete invoice?')) return;
+        db.invoices = db.invoices.filter(x=>x.id!==id);
+        saveDB(); renderInvList(only); refreshKPI(); renderPendingCtn();
+      } else if(act==='print'){
+        const inv=db.invoices.find(x=>x.id===id); if(inv){ renderPrint(inv); window.print(); }
+      } else if(act==='details'){
+        openInvModal(id);
+      }
+    });
+  });
+}
+$('#btnRefreshInv')?.addEventListener('click', ()=> renderInvList());
+$('#invSearch')?.addEventListener('input', ()=> renderInvList());
+$('#togglePendingOnly')?.addEventListener('change', ()=> renderInvList());
+
+/* ========= INVOICE MODAL ========= */
+function openInvModal(id){
+  const inv=db.invoices.find(x=>x.id===id); if(!inv) return;
+  $('#invModal').style.display='flex';
+  $('#invModal').dataset.id=id;
+  const htmlLines = inv.lines.map((ln,i)=>{
+    const it=(db.items.find(x=>x.id===ln.itemId)||{name:ln.itemId}).name;
+    return `<tr>
+      <td>${i+1}</td><td>${it}</td>
+      <td>${ln.ctn}/${ln.dozen}/${ln.piece}</td>
+      <td>${fmt(ln.pricePerPiece)}</td>
+      <td>${fmt(ln.lineTotal)}</td>
+      <td><button class="btn-danger btn-small" data-lid="${ln.id}" data-act="remLine">Delete line</button></td>
+    </tr>`;
+  }).join('');
+  const pending=Math.max(0, inv.total - (inv.paid||0));
+  $('#invDetails').innerHTML=`
+    <div style="margin-bottom:8px"><b>Invoice #</b> ${inv.id} &nbsp; <span class="pill">${inv.date}</span></div>
+    <div style="margin-bottom:8px"><b>Customer:</b> ${inv.customer}</div>
+    <table style="width:100%">
+      <thead><tr><th>#</th><th>Item</th><th>CTN/Doz/Pcs</th><th>Price/pc</th><th>Total</th><th></th></tr></thead>
+      <tbody id="invDetLines">${htmlLines || '<tr><td colspan="6" style="color:#a3b4d0">No lines</td></tr>'}</tbody>
+    </table>
+    <div style="margin-top:8px; display:flex; gap:12px; flex-wrap:wrap">
+      <div class="pill">Total: ${fmt(inv.total)}</div>
+      <div class="pill">Paid: <span id="detPaid">${fmt(inv.paid||0)}</span></div>
+      <div class="pill">Pending: <span id="detPend">${fmt(pending)}</span></div>
+    </div>
+  `;
+  $('#invDetLines').querySelectorAll('[data-act="remLine"]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      if(!confirm('Delete this line?')) return;
+      const lid=b.dataset.lid;
+      inv.lines = inv.lines.filter(x=>x.id!==lid);
+      inv.total = inv.lines.reduce((s,ln)=> s+ln.lineTotal, 0);
+      saveDB();
+      openInvModal(id);
+      renderInvList($('#togglePendingOnly').checked); refreshKPI(); renderPendingCtn();
+    });
+  });
+}
+$('#btnCloseInv').addEventListener('click', ()=> $('#invModal').style.display='none');
+$('#btnAddPayment').addEventListener('click', ()=>{
+  const id=$('#invModal').dataset.id; const inv=db.invoices.find(x=>x.id===id); if(!inv) return;
+  const amt=Number($('#payAmt').value||0); const pwd=$('#payPwd').value||'';
+  if(!amt || amt<=0) return alert('Enter payment amount');
+  if(pwd!==PAY_PWD) return alert('Wrong payment password');
+  inv.paid = (inv.paid||0) + amt;
+  saveDB();
+  $('#detPaid').textContent=fmt(inv.paid);
+  $('#detPend').textContent=fmt(Math.max(0, inv.total - inv.paid));
+  $('#payAmt').value=''; $('#payPwd').value='';
+  renderInvList($('#togglePendingOnly').checked); refreshKPI();
+});
+
+/* ========= PRINT ========= */
+function renderPrint(inv){
+  $('#pNo').textContent=inv.id;
+  $('#pDate').textContent=inv.date;
+  $('#pCust').textContent=inv.customer;
+  const tbody=$('#pLines'); tbody.innerHTML='';
+  inv.lines.forEach((ln,i)=>{
+    const it=(db.items.find(x=>x.id===ln.itemId)||{name:ln.itemId}).name;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td style="padding:8px;border:1px solid #cbd5e1">${i+1}</td>
+      <td style="padding:8px;border:1px solid #cbd5e1">${it}</td>
+      <td style="padding:8px;border:1px solid #cbd5e1">${ln.ctn}/${ln.dozen}/${ln.piece}</td>
+      <td style="padding:8px;border:1px solid #cbd5e1">${fmt(ln.pricePerPiece)}</td>
+      <td style="padding:8px;border:1px solid #cbd5e1">${fmt(ln.lineTotal)}</td>`;
+    tbody.appendChild(tr);
+  });
+  $('#pGrand').textContent=fmt(inv.total);
+  $('#pPaid').textContent=fmt(inv.paid||0);
+  $('#pPend').textContent=fmt(Math.max(0, inv.total-(inv.paid||0)));
+  $('#printArea').style.display='block';
+  setTimeout(()=> $('#printArea').style.display='none', 600);
+}
+
+/* ========= SALES (dashboard view) ========= */
+function openSales(name){
+  showSection('sales');
+  $('#salesTitle').textContent = `Sales — ${name}`;
+  const tbody=$('#salesTbody'); tbody.innerHTML='';
+  const list = name==='All' ? db.invoices.slice() : db.invoices.filter(inv=> inv.customer===name);
+  list.sort((a,b)=> b.date.localeCompare(a.date));
+  if(list.length===0){ tbody.innerHTML=`<tr><td colspan="7" style="color:#a3b4d0">No invoices</td></tr>`; }
+  let paid=0, pend=0;
+  list.forEach((inv,i)=>{
+    const p=Math.max(0, inv.total-(inv.paid||0));
+    paid += (inv.paid||0); pend += p;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="w-idx">${i+1}</td><td>${inv.date}</td><td>${inv.id}</td><td>${inv.customer}</td><td>${fmt(inv.total)}</td><td>${fmt(inv.paid||0)}</td><td>${fmt(p)}</td>`;
+    tbody.appendChild(tr);
+  });
+  $('#salesPaid').textContent=fmt(paid);
+  $('#salesPending').textContent=fmt(pend);
+  $('#salesCount').textContent=list.length;
+}
+
+/* ========= INIT ========= */
+function init(){
+  loadDB();
+  checkAuth();
+  showSection('dash');
+  refreshKPI();
+  // Initialize receive date label
+  if($('#recDate')) { $('#recDate').value = todayISO(); $('#recDateLabel').textContent=$('#recDate').value; }
+  // Hide sidebar by default on phones for cleaner view
+  if(window.innerWidth<=900){ $('#sidebar').style.display='none'; }
+}
+document.addEventListener('DOMContentLoaded', init);
+
+// Re-apply mobile menu visibility on resize (optional polish)
+window.addEventListener('resize', ()=>{
+  if(window.innerWidth>900){ $('#sidebar').style.display='block'; }
+});
+</script>
+</body>
+</html>
